@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#00AEEF">
+<title>Bảng xếp hạng giải chạy tích lũy | Karofi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --blue-500:#00AEEF;
+    --blue-600:#0090CB;
+    --blue-700:#046BAA;
+    --navy-900:#07305A;
+    --ink:#0B2540;
+    --ink-soft:#52708C;
+    --white:#FFFFFF;
+    --surface:#FFFFFF;
+    --surface-alt:#F2F9FD;
+    --border:#DCEAF4;
+    --gold:#E8A916;
+    --gold-soft:#FFF1CE;
+    --silver:#8FA2B5;
+    --silver-soft:#EAF0F5;
+    --bronze:#C97A3D;
+    --bronze-soft:#FAE3CE;
+    --glow-blue: rgba(0,174,239,.55);
+    --glow-gold: rgba(255,196,32,.65);
+    --shadow-lg: 0 24px 50px -18px rgba(7,48,90,.38);
+    --shadow-sm: 0 8px 20px -10px rgba(7,48,90,.25);
+    --radius-lg: 22px;
+    --radius-md: 16px;
+    --radius-sm: 10px;
+    --font: 'Montserrat', 'Segoe UI', sans-serif;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:var(--font);
+    color:var(--ink);
+    min-height:100vh;
+    position:relative;
+    overflow-x:hidden;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  /* Background photo now sourced from a sibling ./assets folder so it can be
+     swapped without touching the code — see README note at bottom of file. */
+  .bg-photo{
+    position:fixed;
+    inset:-20px;
+    background-image:url('assets/background.png');
+    background-size:cover;
+    background-position:center 32%;
+    filter:blur(3px) saturate(1.15) brightness(1.02);
+    transform:scale(1.03);
+    z-index:-2;
+  }
+  .bg-overlay{
+    position:fixed;
+    inset:0;
+    z-index:-1;
+    background:
+      radial-gradient(1200px 640px at 50% -10%, rgba(255,255,255,.5), transparent 60%),
+      linear-gradient(180deg, rgba(232,247,255,.68) 0%, rgba(203,238,255,.52) 32%, rgba(190,232,255,.42) 58%, rgba(232,248,255,.74) 100%);
+  }
+
+  /* ---------- Topbar ---------- */
+  .topbar{
+    position:sticky;
+    top:0;
+    z-index:50;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    padding:12px clamp(16px,4vw,48px);
+    background:rgba(255,255,255,.75);
+    backdrop-filter:blur(16px) saturate(160%);
+    -webkit-backdrop-filter:blur(16px) saturate(160%);
+    border-bottom:1px solid rgba(255,255,255,.7);
+    box-shadow:0 4px 24px -14px rgba(7,48,90,.25);
+  }
+  .brand{display:flex;align-items:center;gap:12px;min-width:0;}
+  .brand img{height:32px;width:auto;display:block;}
+  .brand-divider{width:1px;height:24px;background:var(--border);flex-shrink:0;}
+  .brand-tag{
+    font-size:10.5px;font-weight:800;letter-spacing:.14em;
+    color:var(--blue-700);text-transform:uppercase;white-space:nowrap;
+  }
+  .status-cluster{display:flex;align-items:center;gap:14px;flex-shrink:0;}
+  .sync-info{display:flex;flex-direction:column;align-items:flex-end;line-height:1.25;}
+  .sync-label{font-size:9.5px;font-weight:700;letter-spacing:.1em;color:var(--ink-soft);text-transform:uppercase;display:flex;align-items:center;gap:5px;}
+  .live-dot{width:7px;height:7px;border-radius:50%;background:#22C55E;box-shadow:0 0 0 0 rgba(34,197,94,.55);animation:pulse 2.2s infinite;}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(34,197,94,.55);}70%{box-shadow:0 0 0 7px rgba(34,197,94,0);}100%{box-shadow:0 0 0 0 rgba(34,197,94,0);}}
+  .sync-time{font-size:12.5px;font-weight:600;color:var(--ink);}
+  .refresh-btn{
+    display:flex;align-items:center;gap:7px;border:none;cursor:pointer;
+    background:linear-gradient(135deg,var(--blue-500),var(--blue-700));color:#fff;
+    font-family:var(--font);font-weight:700;font-size:12.5px;letter-spacing:.02em;
+    padding:9px 16px;border-radius:999px;box-shadow:var(--shadow-sm);
+    transition:transform .15s ease, box-shadow .15s ease, opacity .15s ease;
+  }
+  .refresh-btn:hover{transform:translateY(-1px);box-shadow:0 12px 24px -10px rgba(7,48,90,.45);}
+  .refresh-btn:active{transform:translateY(0);}
+  .refresh-btn:disabled{opacity:.65;cursor:default;transform:none;}
+  .refresh-btn svg{width:14px;height:14px;transition:transform .5s ease;}
+  .refresh-btn.spinning svg{animation:spin .8s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  button:focus-visible, a:focus-visible, input:focus-visible{outline:3px solid #7cd6ff;outline-offset:2px;}
+
+  /* ---------- Hero ---------- */
+  main{position:relative;z-index:1;}
+  .hero{max-width:980px;margin:0 auto;padding:clamp(36px,7vw,64px) 20px 8px;text-align:center;}
+  .hero-eyebrow{
+    display:inline-flex;align-items:center;gap:8px;font-size:11.5px;font-weight:800;
+    letter-spacing:.16em;text-transform:uppercase;color:var(--blue-700);
+    background:rgba(0,174,239,.10);border:1px solid rgba(0,174,239,.25);
+    padding:7px 16px;border-radius:999px;margin-bottom:18px;
+  }
+  .hero h1{
+    margin:0;font-size:clamp(26px,5.2vw,50px);font-weight:900;letter-spacing:-.015em;line-height:1.32;
+    padding-bottom:4px;
+    background:linear-gradient(120deg,var(--navy-900) 15%,var(--blue-600) 60%,var(--blue-500) 100%);
+    -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;
+  }
+  .hero-kv{margin:22px auto 4px;max-width:460px;}
+  .hero-kv img{width:100%;height:auto;display:block;}
+
+  .summary-row{display:flex;flex-wrap:wrap;justify-content:center;gap:14px;max-width:820px;margin:0 auto 44px;}
+  .summary-chip{
+    display:flex;flex-direction:column;align-items:center;text-align:center;gap:2px;
+    background:rgba(255,255,255,.82);border:1px solid rgba(255,255,255,.9);backdrop-filter:blur(10px);
+    padding:14px 22px;border-radius:var(--radius-md);box-shadow:var(--shadow-sm);min-width:150px;
+  }
+  .summary-chip .val{font-size:22px;font-weight:800;color:var(--navy-900);}
+  .summary-chip .lbl{font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-soft);}
+
+  /* ---------- Meaning box: static, centered in the hero, above the key visual ---------- */
+  .meaning-box{
+    position:relative;
+    max-width:920px;
+    margin:22px auto;
+    background:rgba(255,255,255,.6);
+    backdrop-filter:blur(14px) saturate(160%);
+    -webkit-backdrop-filter:blur(14px) saturate(160%);
+    border:1.5px solid rgba(0,174,239,.38);
+    border-radius:20px;
+    padding:16px 30px;
+    box-shadow:0 0 0 6px rgba(0,174,239,.07), 0 18px 36px -20px rgba(7,48,90,.28);
+    opacity:0;
+    transform:translateY(14px);
+    animation:meaningIn .7s ease .15s forwards;
+  }
+  @keyframes meaningIn{to{opacity:1;transform:translateY(0);}}
+  .meaning-box::before{
+    content:'';position:absolute;inset:-3px;border-radius:23px;z-index:-1;
+    background:linear-gradient(135deg, rgba(0,174,239,.4), rgba(0,144,203,.12));
+    filter:blur(10px);opacity:.7;
+  }
+  .meaning-quote-mark{
+    display:inline;font-family:Georgia,serif;font-size:19px;line-height:0;
+    color:var(--blue-500);opacity:.55;font-weight:900;margin-right:2px;vertical-align:-2px;
+  }
+  .meaning-text{
+    margin:0;font-size:14px;font-style:italic;line-height:1.6;
+    color:var(--blue-700);text-align:center;font-weight:500;
+  }
+  .meaning-text strong{color:var(--navy-900);font-weight:800;font-style:normal;}
+
+  @media (max-width:640px){
+    .meaning-box{padding:14px 20px;margin:18px auto;}
+    .meaning-text{font-size:13px;}
+  }
+
+  /* ---------- Section headings ---------- */
+  .section-eyebrow{
+    display:flex;align-items:center;justify-content:center;gap:10px;font-size:13px;font-weight:800;
+    letter-spacing:.18em;text-transform:uppercase;color:var(--navy-900);margin:0 0 24px;
+  }
+  .section-eyebrow::before,.section-eyebrow::after{content:'';height:1px;width:44px;background:linear-gradient(90deg,transparent,var(--blue-500));}
+  .section-eyebrow::after{background:linear-gradient(90deg,var(--blue-500),transparent);}
+
+  /* ---------- Podium (gamified) ---------- */
+  .podium-section{max-width:960px;margin:0 auto;padding:22px 20px 12px;}
+  .podium{display:flex;align-items:flex-end;justify-content:center;gap:20px;flex-wrap:wrap;}
+  .podium-card{
+    position:relative;flex:1 1 240px;max-width:270px;
+    border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);background:var(--surface);
+    border:1px solid rgba(255,255,255,.8);overflow:visible;
+  }
+  .podium-card[data-rank="1"]{order:2;transform:translateY(-18px);z-index:2;}
+  .podium-card[data-rank="2"]{order:1;}
+  .podium-card[data-rank="3"]{order:3;}
+
+  .podium-card .glow{
+    position:absolute;top:-30px;left:50%;transform:translate(-50%,0);
+    width:200px;height:200px;border-radius:50%;
+    background:radial-gradient(circle, var(--glow-gold), transparent 70%);
+    filter:blur(4px);opacity:.55;pointer-events:none;
+    animation:glowPulse 2.6s ease-in-out infinite;
+    z-index:0;
+  }
+  @keyframes glowPulse{0%,100%{opacity:.4;transform:translate(-50%,0) scale(1);}50%{opacity:.75;transform:translate(-50%,0) scale(1.08);}}
+  .podium-card .crown{
+    position:absolute;top:-20px;left:50%;transform:translateX(-50%);
+    font-size:38px;z-index:2;animation:crownBounce 2.2s ease-in-out infinite;
+    filter:drop-shadow(0 0 12px rgba(255,209,102,.9)) drop-shadow(0 0 22px rgba(255,190,60,.55)) drop-shadow(0 4px 6px rgba(0,0,0,.25));
+  }
+  @keyframes crownBounce{0%,100%{transform:translateX(-50%) translateY(0);}50%{transform:translateX(-50%) translateY(-5px);}}
+
+  .medal-chip{
+    position:absolute;top:12px;right:12px;width:46px;height:46px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;padding:6px;
+    background:rgba(255,255,255,.92);box-shadow:var(--shadow-sm);z-index:1;
+  }
+  .medal-chip img{width:100%;height:100%;object-fit:contain;display:block;}
+  .podium-card[data-rank="1"] .medal-chip{width:56px;height:56px;top:10px;right:10px;}
+
+  .card-body{position:relative;z-index:1;padding:30px 20px 18px;text-align:center;}
+  .avatar{
+    width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+    margin:0 auto 12px;font-weight:900;font-size:19px;color:#fff;
+    background:linear-gradient(135deg, #22E1FF 0%, var(--blue-700) 100%);
+    box-shadow:0 8px 18px -6px rgba(7,48,90,.4), inset 0 -3px 6px rgba(0,0,0,.15);
+    border:3px solid #fff;
+  }
+  .podium-card[data-rank="1"] .avatar{width:76px;height:76px;font-size:23px;}
+  .avatar.long-text{font-size:15px;}
+  .podium-card[data-rank="1"] .avatar.long-text{font-size:18px;}
+  .team-name{font-size:17px;font-weight:800;color:var(--navy-900);line-height:1.25;word-break:break-word;min-height:22px;}
+  .leading-tag{
+    display:inline-block;margin-top:7px;font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;
+    color:#fff;background:linear-gradient(135deg,#FF8A3D,#E8A916);padding:4px 11px;border-radius:999px;
+  }
+  .total-km{font-size:30px;font-weight:900;color:var(--blue-600);line-height:1.1;margin-top:10px;}
+  .podium-card[data-rank="1"] .total-km{font-size:36px;color:var(--blue-700);}
+  .total-km .unit{font-size:14px;font-weight:700;color:var(--ink-soft);margin-left:3px;}
+  .km-label{font-size:10.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft);margin-top:2px;}
+  .podium-stats{display:flex;justify-content:center;gap:16px;margin-top:14px;padding-top:12px;border-top:1px dashed var(--border);}
+  .podium-stats div{text-align:center;}
+  .podium-stats .n{font-size:15px;font-weight:800;color:var(--ink);}
+  .podium-stats .l{font-size:9.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-soft);}
+
+  .footer-step{
+    font-size:32px;font-weight:900;color:#fff;text-align:center;padding:8px 0 10px;
+    border-radius:0 0 20px 20px;
+    box-shadow:inset 0 4px 8px rgba(255,255,255,.35), inset 0 -6px 10px rgba(0,0,0,.15);
+  }
+  .podium-card[data-rank="1"] .footer-step{background:linear-gradient(180deg,#FFD873,var(--gold));font-size:38px;padding:10px 0 12px;}
+  .podium-card[data-rank="2"] .footer-step{background:linear-gradient(180deg,#D6E0E8,var(--silver));}
+  .podium-card[data-rank="3"] .footer-step{background:linear-gradient(180deg,#E9B487,var(--bronze));}
+
+  /* ---------- List panel ---------- */
+  .list-section{max-width:980px;margin:52px auto 30px;padding:0 20px;}
+  .list-panel{background:rgba(255,255,255,.55);border-radius:var(--radius-lg);padding:20px;box-shadow:var(--shadow-lg);border:1px solid rgba(255,255,255,.7);}
+
+  .list-toolbar{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;margin-bottom:16px;}
+  .search-box{
+    display:flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--border);
+    border-radius:999px;padding:9px 16px;box-shadow:var(--shadow-sm);flex:1 1 220px;max-width:320px;
+  }
+  .search-box svg{width:16px;height:16px;color:var(--ink-soft);flex-shrink:0;}
+  .search-box input{border:none;outline:none;flex:1;font-family:var(--font);font-size:13.5px;color:var(--ink);background:transparent;min-width:0;-webkit-appearance:none;appearance:none;}
+  .search-box input::-webkit-search-decoration,
+  .search-box input::-webkit-search-cancel-button,
+  .search-box input::-webkit-search-results-button,
+  .search-box input::-webkit-search-results-decoration{-webkit-appearance:none;appearance:none;}
+  .sort-toggle{display:flex;gap:6px;background:#EAF3FA;padding:4px;border-radius:999px;}
+  .sort-btn{
+    border:none;background:transparent;cursor:pointer;font-family:var(--font);font-weight:700;font-size:11.5px;
+    letter-spacing:.05em;text-transform:uppercase;
+    padding:8px 16px;border-radius:999px;color:var(--ink-soft);transition:background .15s, color .15s;white-space:nowrap;
+  }
+  .sort-btn.active{background:linear-gradient(135deg,var(--blue-500),var(--blue-700));color:#fff;box-shadow:var(--shadow-sm);}
+
+  .rank-list{display:flex;flex-direction:column;gap:10px;}
+  .rank-row{
+    display:flex;align-items:center;gap:14px;flex-wrap:wrap;background:var(--surface);
+    border-radius:16px;padding:12px 18px;box-shadow:var(--shadow-sm);border:1px solid rgba(255,255,255,.7);
+    transition:transform .15s;
+  }
+  .rank-row:hover{transform:translateY(-2px);}
+  .rank-row.top3[data-rank="1"]{background:linear-gradient(90deg, var(--gold-soft) 0%, #fff 55%);}
+  .rank-row.top3[data-rank="2"]{background:linear-gradient(90deg, var(--silver-soft) 0%, #fff 55%);}
+  .rank-row.top3[data-rank="3"]{background:linear-gradient(90deg, var(--bronze-soft) 0%, #fff 55%);}
+
+  .row-rank{flex:0 0 auto;min-width:36px;display:flex;align-items:center;justify-content:center;}
+  .rank-badge{
+    width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+    font-weight:800;font-size:13px;background:var(--surface-alt);color:var(--ink-soft);border:1px solid var(--border);
+  }
+  .medal-icon{width:34px;height:34px;object-fit:contain;display:block;filter:drop-shadow(0 3px 5px rgba(0,0,0,.18));}
+
+  .row-avatar{
+    flex:0 0 auto;width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+    font-weight:800;font-size:12.5px;color:#fff;border:2px solid #fff;box-shadow:var(--shadow-sm);
+    background:linear-gradient(135deg, #22E1FF 0%, var(--blue-700) 100%);
+  }
+  .row-avatar.long-text{font-size:10.5px;}
+
+  .row-main{flex:1 1 160px;min-width:0;display:flex;align-items:center;}
+  .row-name{font-weight:800;color:var(--navy-900);font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+
+  .row-stats{flex:0 0 auto;display:flex;gap:22px;}
+  .row-stats .stat{text-align:center;min-width:60px;}
+  .row-stats .stat .v{display:block;font-weight:800;font-size:13.5px;color:var(--ink);}
+  .row-stats .stat .l{display:block;font-size:9px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-soft);}
+  .row-stats .stat.highlight .v{color:var(--blue-700);}
+
+  .list-footer{display:flex;flex-direction:column;align-items:center;gap:14px;margin-top:18px;}
+
+  .pagination{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;}
+  .page-btn{
+    min-width:34px;height:34px;padding:0 8px;border-radius:10px;border:1px solid var(--border);
+    background:#fff;color:var(--ink-soft);font-family:var(--font);font-weight:700;font-size:12.5px;cursor:pointer;
+  }
+  .page-btn.active{background:linear-gradient(135deg,var(--blue-500),var(--blue-700));color:#fff;border-color:transparent;}
+  .page-btn:disabled{opacity:.4;cursor:default;}
+  .page-ellipsis{display:flex;align-items:center;color:var(--ink-soft);font-weight:700;padding:0 4px;}
+
+  .empty-state{text-align:center;padding:40px 20px;color:var(--ink-soft);font-weight:600;font-size:14px;}
+
+  /* ---------- Loading skeleton ---------- */
+  .skeleton{position:relative;overflow:hidden;background:#E4EEF5;border-radius:6px;color:transparent !important;}
+  .skeleton::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.75),transparent);animation:shimmer 1.4s infinite;}
+  @keyframes shimmer{0%{transform:translateX(-100%);}100%{transform:translateX(100%);}}
+
+  /* ---------- Error banner ---------- */
+  .error-banner{
+    display:none;max-width:820px;margin:0 auto 28px;padding:16px 20px;background:#FFF4E6;
+    border:1px solid #F7C98B;color:#7A4B0A;border-radius:var(--radius-md);font-size:13.5px;font-weight:600;
+    text-align:center;box-shadow:var(--shadow-sm);
+  }
+  .error-banner.show{display:block;}
+  .error-banner button{
+    margin-left:10px;border:none;background:#B45309;color:#fff;font-family:var(--font);font-weight:700;
+    font-size:12.5px;padding:7px 14px;border-radius:999px;cursor:pointer;
+  }
+
+  footer{position:relative;z-index:1;text-align:center;padding:26px 20px 40px;font-size:12px;color:var(--ink-soft);font-weight:500;}
+  footer a{color:var(--blue-700);font-weight:700;text-decoration:none;}
+  footer a:hover{text-decoration:underline;}
+
+  /* ---------- Responsive ---------- */
+  @media (max-width:640px){
+    .brand-tag{display:none;}
+    .sync-info{display:none;}
+    .podium{gap:12px;}
+    .podium-card[data-rank="1"]{order:1;transform:none;}
+    .podium-card[data-rank="2"]{order:2;}
+    .podium-card[data-rank="3"]{order:3;}
+    .podium-card{flex:1 1 100%;max-width:360px;}
+    .list-toolbar{flex-direction:column;align-items:stretch;}
+    .search-box{max-width:none;}
+    .sort-toggle{justify-content:center;}
+    .row-stats{flex:1 1 100%;justify-content:space-between;}
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:0.001ms !important;animation-iteration-count:1 !important;transition-duration:0.001ms !important;}
+  }
+</style>
+</head>
+<body>
+
+  <div class="bg-photo"></div>
+  <div class="bg-overlay"></div>
+
+  <header class="topbar">
+    <div class="brand">
+      <img src="assets/logo.png" alt="Karofi">
+      <div class="brand-divider"></div>
+      <span class="brand-tag">20 Triệu Bước Chân</span>
+    </div>
+    <div class="status-cluster">
+      <div class="sync-info">
+        <span class="sync-label"><span class="live-dot"></span>Cập nhật gần nhất</span>
+        <span class="sync-time" id="syncTime">Đang tải…</span>
+      </div>
+      <button class="refresh-btn" id="refreshBtn" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+        <span>Làm mới</span>
+      </button>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <span class="hero-eyebrow">Giải&nbsp;chạy&nbsp;tích&nbsp;lũy Kỷ&nbsp;niệm&nbsp;20&nbsp;năm thành&nbsp;lập&nbsp;Tập&nbsp;đoàn</span>
+      <h1>Bảng&nbsp;xếp&nbsp;hạng giải&nbsp;chạy&nbsp;tích&nbsp;lũy</h1>
+
+      <aside class="meaning-box" id="meaningBox">
+        <p class="meaning-text"><span class="meaning-quote-mark">"</span>Mỗi bước chân của Nhà Ká sẽ <strong>góp 50 VNĐ</strong> vào <strong>quỹ Hạnh phúc</strong>, được Tập đoàn quy đổi thành nguồn kinh phí để <strong>hỗ trợ CBCNV có hoàn cảnh đặc biệt</strong> và triển khai các hoạt động <strong>thiện nguyện</strong>, sẻ chia cùng cộng đồng.
+        </p>
+      </aside>
+
+      <div class="hero-kv">
+        <img src="assets/keyvisual.png" alt="20 triệu bước chân">
+      </div>
+      <div class="summary-row" id="summaryRow">
+        <div class="summary-chip"><span class="val skeleton" id="statTeams">00</span><span class="lbl">Đội tham gia</span></div>
+        <div class="summary-chip"><span class="val skeleton" id="statTotalKm">00</span><span class="lbl">Tổng Km toàn giải</span></div>
+        <div class="summary-chip"><span class="val skeleton" id="statMembers">00</span><span class="lbl">Tổng thành viên</span></div>
+      </div>
+    </section>
+
+    <div class="error-banner" id="errorBanner">
+      <span id="errorMessage">Không thể tải dữ liệu.</span>
+      <button id="retryBtn" type="button">Thử lại</button>
+    </div>
+
+    <section class="podium-section">
+      <div class="podium" id="podium"></div>
+    </section>
+
+    <section class="list-section">
+      <div class="section-eyebrow">Bảng&nbsp;xếp&nbsp;hạng&nbsp;tích&nbsp;lũy giai&nbsp;đoạn&nbsp;1</div>
+      <div class="list-panel">
+        <div class="list-toolbar">
+          <div class="search-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            <input type="search" id="searchInput" placeholder="Tìm đội theo tên...">
+          </div>
+          <div class="sort-toggle" id="sortToggle">
+            <button class="sort-btn active" data-sort="totalKm" type="button">Tổng Km</button>
+            <button class="sort-btn" data-sort="avgKm" type="button">Km TB</button>
+          </div>
+        </div>
+
+        <div class="rank-list" id="rankList"></div>
+
+        <div class="list-footer">
+          <div class="pagination" id="pagination"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    Karofi · Giải chạy tích lũy "20 triệu bước chân" · Dữ liệu cập nhập bởi bộ phận Phát triển Văn hóa
+  </footer>
+
+<script>
+(function(){
+  "use strict";
+
+  /* =========================================================
+     CẤU HÌNH — chỉnh ở đây nếu cấu trúc Google Sheet thay đổi
+     ========================================================= */
+  var CONFIG = {
+    SPREADSHEET_ID: "1MiDwj0qMpbvN-OYKlH7UGcu8XxZuwldstN3rkWPdMWg",
+    SHEET_NAME: "",        // để trống = dùng sheet đầu tiên. Ví dụ: "TỔNG HỢP"
+    HEADER_ROWS: 1,
+    TEAM_COL: 0,            // Cột A = Tên đội
+    TOTAL_KM_COL: 16,       // Cột Q = Tổng Km
+    MEMBERS_COL: 17,        // Cột R = Số lượng thành viên
+    AVG_KM_COL: 18,         // Cột S = Số Km trung bình
+    PAGE_SIZE: 10,          // số đội / trang
+    REFRESH_SECONDS: 10     // tự động làm mới mỗi n giây (ngầm, không nháy màn nếu dữ liệu không đổi)
+  };
+
+  var els = {
+    syncTime: document.getElementById('syncTime'),
+    refreshBtn: document.getElementById('refreshBtn'),
+    podium: document.getElementById('podium'),
+    rankList: document.getElementById('rankList'),
+    listSection: document.querySelector('.list-section'),
+    errorBanner: document.getElementById('errorBanner'),
+    errorMessage: document.getElementById('errorMessage'),
+    retryBtn: document.getElementById('retryBtn'),
+    statTeams: document.getElementById('statTeams'),
+    statTotalKm: document.getElementById('statTotalKm'),
+    statMembers: document.getElementById('statMembers'),
+    searchInput: document.getElementById('searchInput'),
+    sortBtns: Array.prototype.slice.call(document.querySelectorAll('.sort-btn')),
+    pagination: document.getElementById('pagination'),
+    meaningBox: document.getElementById('meaningBox')
+  };
+
+  var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var refreshTimer = null;
+  var searchDebounceId = null;
+
+  var state = {
+    sortBy: 'totalKm',     // 'totalKm' | 'avgKm'
+    searchQuery: '',
+    page: 1,
+    teamsAll: [],          // full list, sorted by Tổng Km desc (official ranking)
+    lastSignature: null,
+    firstLoad: true
+  };
+
+  /* ---------- Google Sheet fetch (JSONP — bypasses CORS) ---------- */
+  var jsonpCounter = 0;
+  function fetchTableJsonp(){
+    return new Promise(function(resolve, reject){
+      jsonpCounter++;
+      var callbackName = "karofiSheetCallback_" + jsonpCounter + "_" + Date.now();
+      var script = document.createElement('script');
+      var timeoutId;
+
+      function cleanup(){
+        delete window[callbackName];
+        if (script.parentNode) script.parentNode.removeChild(script);
+        clearTimeout(timeoutId);
+      }
+
+      window[callbackName] = function(data){
+        cleanup();
+        if (!data) { reject(new Error("Không nhận được dữ liệu từ Google Sheet.")); return; }
+        if (data.status === "error") {
+          var msg = (data.errors && data.errors[0] && data.errors[0].detailed_message) || "Google Sheet trả về lỗi.";
+          reject(new Error(msg));
+          return;
+        }
+        resolve(data.table);
+      };
+
+      var base = "https://docs.google.com/spreadsheets/d/" + CONFIG.SPREADSHEET_ID + "/gviz/tq";
+      var params = [
+        "tqx=out:json;responseHandler:" + callbackName,
+        "headers=" + CONFIG.HEADER_ROWS,
+        "_=" + Date.now()
+      ];
+      if (CONFIG.SHEET_NAME) params.push("sheet=" + encodeURIComponent(CONFIG.SHEET_NAME));
+      script.src = base + "?" + params.join("&");
+
+      script.onerror = function(){
+        cleanup();
+        reject(new Error("Không tải được dữ liệu từ Google Sheet (kiểm tra kết nối mạng hoặc quyền chia sẻ)."));
+      };
+      timeoutId = setTimeout(function(){
+        cleanup();
+        reject(new Error("Hết thời gian chờ phản hồi từ Google Sheet (quá 15 giây)."));
+      }, 15000);
+
+      document.head.appendChild(script);
+    });
+  }
+
+  /* ---------- Formatting helpers ---------- */
+  function fmtInt(n){ return Math.round(n).toLocaleString('vi-VN'); }
+  function fmtDec(n){ return n.toLocaleString('vi-VN', {minimumFractionDigits:2, maximumFractionDigits:2}); }
+  function escapeHtml(str){
+    var div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+  function normalizeStr(s){
+    return String(s).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d');
+  }
+  function medalFile(rank){
+    if (rank === 1) return "assets/gold_medal.png";
+    if (rank === 2) return "assets/silver_medal.png";
+    return "assets/bronze_medal.png";
+  }
+  function getInitials(name){
+    var str = String(name).trim();
+    var numMatch = str.match(/\d+/);
+    if (numMatch){
+      return ('T' + numMatch[0]).toUpperCase();
+    }
+    var parts = str.split(/\s+/).filter(Boolean);
+    if (parts.length === 0) return "??";
+    if (parts.length === 1) return parts[0].substring(0,2).toUpperCase();
+    return (parts[0].charAt(0) + parts[parts.length-1].charAt(0)).toUpperCase();
+  }
+
+  /* ---------- Sheet parsing ---------- */
+  function cellValue(cells, idx){
+    if (!cells || !cells[idx]) return null;
+    return cells[idx].v;
+  }
+  function extractTeams(table){
+    var rows = table.rows || [];
+    var teams = [];
+    for (var i = 0; i < rows.length; i++){
+      var cells = rows[i].c || [];
+      var rawName = cellValue(cells, CONFIG.TEAM_COL);
+      var name = (rawName == null ? "" : String(rawName)).trim();
+      if (!name) continue;
+
+      var rawTotal = cellValue(cells, CONFIG.TOTAL_KM_COL);
+      var totalKm = typeof rawTotal === "number" ? rawTotal : parseFloat(rawTotal);
+      if (!isFinite(totalKm)) continue;
+
+      var rawMembers = cellValue(cells, CONFIG.MEMBERS_COL);
+      var members = typeof rawMembers === "number" ? rawMembers : parseFloat(rawMembers);
+      if (!isFinite(members)) members = 0;
+
+      var rawAvg = cellValue(cells, CONFIG.AVG_KM_COL);
+      var avgKm = typeof rawAvg === "number" ? rawAvg : parseFloat(rawAvg);
+      if (!isFinite(avgKm)) avgKm = members > 0 ? totalKm / members : 0;
+
+      teams.push({ name: name, totalKm: totalKm, members: members, avgKm: avgKm });
+    }
+    teams.sort(function(a, b){ return b.totalKm - a.totalKm; });
+    teams.forEach(function(t, i){ t.officialRank = i + 1; });
+    return teams;
+  }
+  function computeSignature(teams){
+    return teams.map(function(t){ return t.name + '|' + t.totalKm + '|' + t.members + '|' + t.avgKm; }).join(';');
+  }
+
+  /* ---------- Derived list (sort + search) ---------- */
+  function getSortedList(){
+    var arr = state.teamsAll.slice();
+    if (state.sortBy === 'avgKm'){
+      arr.sort(function(a,b){ return b.avgKm - a.avgKm; });
+    } else {
+      arr.sort(function(a,b){ return b.totalKm - a.totalKm; });
+    }
+    arr.forEach(function(t,i){ t.displayRank = i + 1; });
+    return arr;
+  }
+  function getTop3ByAvg(){
+    var arr = state.teamsAll.slice();
+    arr.sort(function(a,b){ return b.avgKm - a.avgKm; });
+    arr.forEach(function(t,i){ t.avgRank = i + 1; });
+    return arr.slice(0, 3);
+  }
+  function getFilteredList(){
+    var list = getSortedList();
+    if (!state.searchQuery) return list;
+    var q = normalizeStr(state.searchQuery);
+    return list.filter(function(t){ return normalizeStr(t.name).indexOf(q) !== -1; });
+  }
+
+  /* ---------- Number count-up (only on first paint, never on silent refresh) ---------- */
+  function animateNumber(el, target, decimals){
+    if (reduceMotion || !state.firstLoad){
+      el.textContent = decimals ? fmtDec(target) : fmtInt(target);
+      return;
+    }
+    var start = 0, duration = 900, startTime = null;
+    function step(ts){
+      if (startTime === null) startTime = ts;
+      var progress = Math.min((ts - startTime) / duration, 1);
+      var eased = 1 - Math.pow(1 - progress, 3);
+      var value = start + (target - start) * eased;
+      el.textContent = decimals ? fmtDec(value) : fmtInt(value);
+      if (progress < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+
+  /* ---------- Renderers ---------- */
+  function renderSummary(){
+    var totalKm = state.teamsAll.reduce(function(s,t){ return s + t.totalKm; }, 0);
+    var totalMembers = state.teamsAll.reduce(function(s,t){ return s + t.members; }, 0);
+    [els.statTeams, els.statTotalKm, els.statMembers].forEach(function(e){ e.classList.remove('skeleton'); });
+    animateNumber(els.statTeams, state.teamsAll.length, false);
+    animateNumber(els.statTotalKm, totalKm, false);
+    animateNumber(els.statMembers, totalMembers, false);
+  }
+
+  function renderPodium(){
+    var top3 = getTop3ByAvg();
+    els.podium.innerHTML = "";
+    top3.forEach(function(t){
+      var card = document.createElement('div');
+      card.className = 'podium-card';
+      card.setAttribute('data-rank', t.avgRank);
+      var initials = getInitials(t.name);
+      var avatarClass = 'avatar' + (initials.length > 2 ? ' long-text' : '');
+      card.innerHTML =
+        (t.avgRank === 1 ? '<div class="glow"></div><div class="crown">👑</div>' : '') +
+        '<div class="medal-chip"><img src="' + medalFile(t.avgRank) + '" alt="Hạng ' + t.avgRank + '"></div>' +
+        '<div class="card-body">' +
+          '<div class="' + avatarClass + '">' + initials + '</div>' +
+          '<div class="team-name">' + escapeHtml(t.name) + '</div>' +
+          (t.avgRank === 1 ? '<span class="leading-tag">Đang dẫn đầu</span>' : '') +
+          '<div class="total-km"><span class="tk-num">0</span><span class="unit">km/người</span></div>' +
+          '<div class="km-label">Km trung bình mỗi người</div>' +
+          '<div class="podium-stats">' +
+            '<div><div class="n"><span class="total-num">0</span> km</div><div class="l">Tổng Km</div></div>' +
+            '<div><div class="n mem-num">0</div><div class="l">Thành viên</div></div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="footer-step">' + t.avgRank + '</div>';
+      els.podium.appendChild(card);
+      animateNumber(card.querySelector('.tk-num'), t.avgKm, true);
+      animateNumber(card.querySelector('.total-num'), t.totalKm, false);
+      animateNumber(card.querySelector('.mem-num'), t.members, false);
+    });
+  }
+
+  function renderRow(t){
+    var isTop3 = t.displayRank <= 3;
+    var totalHi = state.sortBy === 'totalKm' ? ' highlight' : '';
+    var avgHi = state.sortBy === 'avgKm' ? ' highlight' : '';
+    var initials = getInitials(t.name);
+    var avatarClass = 'row-avatar' + (initials.length > 2 ? ' long-text' : '');
+    var row = document.createElement('div');
+    row.className = 'rank-row' + (isTop3 ? ' top3' : '');
+    row.setAttribute('data-rank', t.displayRank);
+    row.innerHTML =
+      '<div class="row-rank">' + (isTop3
+        ? '<img class="medal-icon" src="' + medalFile(t.displayRank) + '" alt="Hạng ' + t.displayRank + '">'
+        : '<span class="rank-badge">' + t.displayRank + '</span>') + '</div>' +
+      '<div class="' + avatarClass + '">' + initials + '</div>' +
+      '<div class="row-main">' +
+        '<div class="row-name">' + escapeHtml(t.name) + '</div>' +
+      '</div>' +
+      '<div class="row-stats">' +
+        '<div class="stat' + totalHi + '"><span class="v">' + fmtInt(t.totalKm) + ' km</span><span class="l">Tổng Km</span></div>' +
+        '<div class="stat"><span class="v">' + fmtInt(t.members) + '</span><span class="l">Thành viên</span></div>' +
+        '<div class="stat' + avgHi + '"><span class="v">' + fmtDec(t.avgKm) + '</span><span class="l">Km TB</span></div>' +
+      '</div>';
+    return row;
+  }
+
+  function renderPagination(totalPages){
+    els.pagination.innerHTML = '';
+    if (totalPages <= 1){ els.pagination.style.display = 'none'; return; }
+    els.pagination.style.display = 'flex';
+
+    function makeBtn(label, page, opts){
+      opts = opts || {};
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'page-btn' + (opts.active ? ' active' : '');
+      b.textContent = label;
+      if (page) b.setAttribute('data-page', page);
+      if (opts.disabled) b.disabled = true;
+      return b;
+    }
+
+    els.pagination.appendChild(makeBtn('‹', Math.max(1, state.page - 1), { disabled: state.page === 1 }));
+
+    var shown = [];
+    for (var p = 1; p <= totalPages; p++){
+      if (p === 1 || p === totalPages || Math.abs(p - state.page) <= 1) shown.push(p);
+    }
+    var lastAdded = 0;
+    shown.forEach(function(p){
+      if (lastAdded && p - lastAdded > 1){
+        var dots = document.createElement('span');
+        dots.className = 'page-ellipsis';
+        dots.textContent = '…';
+        els.pagination.appendChild(dots);
+      }
+      els.pagination.appendChild(makeBtn(String(p), p, { active: p === state.page }));
+      lastAdded = p;
+    });
+
+    els.pagination.appendChild(makeBtn('›', Math.min(totalPages, state.page + 1), { disabled: state.page === totalPages }));
+  }
+
+  function renderList(){
+    var filtered = getFilteredList();
+    var totalPages = Math.max(1, Math.ceil(filtered.length / CONFIG.PAGE_SIZE));
+    if (state.page > totalPages) state.page = totalPages;
+    if (state.page < 1) state.page = 1;
+
+    var pageSlice = filtered.slice((state.page - 1) * CONFIG.PAGE_SIZE, state.page * CONFIG.PAGE_SIZE);
+
+    els.rankList.innerHTML = '';
+    if (pageSlice.length === 0){
+      var empty = document.createElement('div');
+      empty.className = 'empty-state';
+      empty.textContent = state.searchQuery
+        ? 'Không tìm thấy đội nào khớp “' + state.searchQuery + '”.'
+        : 'Chưa có dữ liệu đội chạy nào được ghi nhận.';
+      els.rankList.appendChild(empty);
+    } else {
+      pageSlice.forEach(function(t){ els.rankList.appendChild(renderRow(t)); });
+    }
+
+    renderPagination(totalPages);
+  }
+
+  /* ---------- Errors / status ---------- */
+  function showError(message){
+    els.errorMessage.textContent = message;
+    els.errorBanner.classList.add('show');
+  }
+  function hideError(){ els.errorBanner.classList.remove('show'); }
+  function setSyncTime(){
+    var now = new Date();
+    els.syncTime.textContent = now.toLocaleString('vi-VN', { hour:'2-digit', minute:'2-digit', day:'2-digit', month:'2-digit', year:'numeric' });
+  }
+  function setLoadingUi(isLoading){
+    els.refreshBtn.disabled = isLoading;
+    els.refreshBtn.classList.toggle('spinning', isLoading);
+  }
+
+  /* ---------- Load pipeline ---------- */
+  async function load(isManual){
+    if (isManual) setLoadingUi(true);
+    try {
+      var table = await fetchTableJsonp();
+      var extracted = extractTeams(table);
+      var sig = computeSignature(extracted);
+      if (sig !== state.lastSignature || isManual || state.firstLoad){
+        state.teamsAll = extracted;
+        state.lastSignature = sig;
+        renderSummary();
+        renderPodium();
+        renderList();
+      }
+      setSyncTime();
+      hideError();
+    } catch (err) {
+      console.error(err);
+      showError((err && err.message ? err.message : "Không thể tải dữ liệu.") +
+        " Hãy đảm bảo Google Sheet được chia sẻ ở chế độ \"Bất kỳ ai có đường liên kết – Người xem\", sau đó bấm Thử lại.");
+    } finally {
+      if (isManual) setLoadingUi(false);
+      state.firstLoad = false;
+    }
+  }
+
+  function scheduleAutoRefresh(){
+    if (refreshTimer) clearInterval(refreshTimer);
+    refreshTimer = setInterval(function(){ load(false); }, CONFIG.REFRESH_SECONDS * 1000);
+  }
+
+  /* ---------- Events ---------- */
+  els.refreshBtn.addEventListener('click', function(){ load(true); });
+  els.retryBtn.addEventListener('click', function(){ load(true); });
+
+  els.sortBtns.forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var sortBy = btn.getAttribute('data-sort');
+      if (sortBy === state.sortBy) return;
+      state.sortBy = sortBy;
+      state.page = 1;
+      els.sortBtns.forEach(function(b){ b.classList.toggle('active', b === btn); });
+      renderList();
+    });
+  });
+
+  els.searchInput.addEventListener('input', function(){
+    var val = els.searchInput.value;
+    clearTimeout(searchDebounceId);
+    searchDebounceId = setTimeout(function(){
+      state.searchQuery = val.trim();
+      state.page = 1;
+      renderList();
+    }, 150);
+  });
+
+  els.pagination.addEventListener('click', function(e){
+    var btn = e.target.closest('.page-btn');
+    if (!btn || btn.disabled) return;
+    var p = parseInt(btn.getAttribute('data-page'), 10);
+    if (!p) return;
+    state.page = p;
+    renderList();
+    els.listSection.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' });
+  });
+
+  load(true);
+  scheduleAutoRefresh();
+})();
+</script>
+</body>
+</html>
