@@ -179,7 +179,7 @@
   /* ---------- Section headings ---------- */
   .section-eyebrow{
     display:flex;align-items:center;justify-content:center;gap:10px;font-size:13px;font-weight:800;
-    letter-spacing:.18em;text-transform:uppercase;color:var(--navy-900);margin:0 0 24px;
+    letter-spacing:.18em;text-transform:uppercase;color:var(--navy-900);margin:0 0 24px;text-align:center;
   }
   .section-eyebrow::before,.section-eyebrow::after{content:'';height:1px;width:44px;background:linear-gradient(90deg,transparent,var(--blue-500));}
   .section-eyebrow::after{background:linear-gradient(90deg,var(--blue-500),transparent);}
@@ -348,15 +348,32 @@
   /* ---------- Responsive ---------- */
   @media (max-width:640px){
     .brand-tag{display:none;}
-    .sync-info{display:none;}
-    .podium{gap:12px;}
-    .podium-card[data-rank="1"]{order:1;transform:none;}
-    .podium-card[data-rank="2"]{order:2;}
-    .podium-card[data-rank="3"]{order:3;}
-    .podium-card{flex:1 1 100%;max-width:360px;}
+    .brand-divider{display:none;}
+    .status-cluster{gap:8px;}
+    .sync-info{display:flex;}
+    .sync-label{font-size:8px;letter-spacing:.06em;gap:3px;}
+    .sync-time{font-size:10.5px;}
+    .refresh-btn{padding:9px 11px;}
+    .refresh-btn span{display:none;}
+
+    .podium{
+      display:grid;grid-template-columns:1fr 1fr;gap:12px;
+      grid-template-areas:"first first" "second third";
+    }
+    .podium-card{flex:none;max-width:none;width:100%;}
+    .podium-card[data-rank="1"]{grid-area:first;order:initial;transform:none;}
+    .podium-card[data-rank="2"]{grid-area:second;order:initial;}
+    .podium-card[data-rank="3"]{grid-area:third;order:initial;}
+    .podium-card[data-rank="2"] .avatar,
+    .podium-card[data-rank="3"] .avatar{width:52px;height:52px;font-size:16px;}
+    .podium-card[data-rank="2"] .card-body,
+    .podium-card[data-rank="3"] .card-body{padding:26px 12px 14px;}
+    .podium-card[data-rank="2"] .total-km,
+    .podium-card[data-rank="3"] .total-km{font-size:24px;}
+
     .list-toolbar{flex-direction:column;align-items:stretch;}
-    .search-box{max-width:none;}
-    .sort-toggle{justify-content:center;}
+    .search-box{flex:0 0 auto;width:100%;max-width:none;}
+    .sort-toggle{justify-content:flex-end;}
     .row-stats{flex:1 1 100%;justify-content:space-between;}
   }
 
