@@ -86,11 +86,6 @@
   }
   .brand{display:flex;align-items:center;gap:12px;min-width:0;}
   .brand img{height:32px;width:auto;display:block;}
-  .brand-divider{width:1px;height:24px;background:var(--border);flex-shrink:0;}
-  .brand-tag{
-    font-size:10.5px;font-weight:800;letter-spacing:.14em;
-    color:var(--blue-700);text-transform:uppercase;white-space:nowrap;
-  }
   .status-cluster{display:flex;align-items:center;gap:14px;flex-shrink:0;}
   .sync-info{display:flex;flex-direction:column;align-items:flex-end;line-height:1.25;}
   .sync-label{font-size:9.5px;font-weight:700;letter-spacing:.1em;color:var(--ink-soft);text-transform:uppercase;display:flex;align-items:center;gap:5px;}
@@ -347,8 +342,6 @@
 
   /* ---------- Responsive ---------- */
   @media (max-width:640px){
-    .brand-tag{display:none;}
-    .brand-divider{display:none;}
     .status-cluster{gap:8px;}
     .sync-info{display:flex;}
     .sync-label{font-size:8px;letter-spacing:.06em;gap:3px;}
@@ -390,8 +383,6 @@
   <header class="topbar">
     <div class="brand">
       <img src="assets/logo.png" alt="Karofi">
-      <div class="brand-divider"></div>
-      <span class="brand-tag">20 Triệu Bước Chân</span>
     </div>
     <div class="status-cluster">
       <div class="sync-info">
@@ -407,11 +398,11 @@
 
   <main>
     <section class="hero">
-      <span class="hero-eyebrow">Giải&nbsp;chạy&nbsp;tích&nbsp;lũy Kỷ&nbsp;niệm&nbsp;20&nbsp;năm thành&nbsp;lập&nbsp;Tập&nbsp;đoàn</span>
+      <span class="hero-eyebrow">Giải&nbsp;chạy Kỷ&nbsp;niệm&nbsp;20&nbsp;năm thành&nbsp;lập&nbsp;Tập&nbsp;đoàn</span>
       <h1>Bảng&nbsp;xếp&nbsp;hạng giải&nbsp;chạy&nbsp;tích&nbsp;lũy</h1>
 
       <aside class="meaning-box" id="meaningBox">
-        <p class="meaning-text"><span class="meaning-quote-mark">"</span>Mỗi bước chân của Nhà Ká sẽ <strong>góp 50 VNĐ</strong> vào <strong>quỹ Hạnh phúc</strong>, được Tập đoàn quy đổi thành nguồn kinh phí để <strong>hỗ trợ CBCNV có hoàn cảnh đặc biệt</strong> và triển khai các hoạt động <strong>thiện nguyện</strong>, sẻ chia cùng cộng đồng.
+        <p class="meaning-text"><span class="meaning-quote-mark">"</span>Mỗi bước chân của Nhà Ká sẽ <strong>góp 50 VNĐ</strong> vào <strong>quỹ Hạnh phúc</strong>, được dùng để <strong>hỗ trợ CBCNV có hoàn cảnh đặc biệt của Tập đoàn</strong> và triển khai các hoạt động <strong>thiện nguyện</strong>, sẻ chia cùng cộng đồng.
         </p>
       </aside>
 
@@ -443,8 +434,8 @@
             <input type="search" id="searchInput" placeholder="Tìm đội theo tên...">
           </div>
           <div class="sort-toggle" id="sortToggle">
-            <button class="sort-btn active" data-sort="totalKm" type="button">Tổng Km</button>
-            <button class="sort-btn" data-sort="avgKm" type="button">Km TB</button>
+            <button class="sort-btn" data-sort="totalKm" type="button">Tổng Km</button>
+            <button class="sort-btn active" data-sort="avgKm" type="button">Km TB</button>
           </div>
         </div>
 
@@ -503,7 +494,7 @@
   var searchDebounceId = null;
 
   var state = {
-    sortBy: 'totalKm',     // 'totalKm' | 'avgKm'
+    sortBy: 'avgKm',       // 'totalKm' | 'avgKm'
     searchQuery: '',
     page: 1,
     teamsAll: [],          // full list, sorted by Tổng Km desc (official ranking)
