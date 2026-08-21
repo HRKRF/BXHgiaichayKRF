@@ -662,7 +662,7 @@
     var totalMembers = state.teamsAll.reduce(function(s,t){ return s + t.members; }, 0);
     [els.statTeams, els.statTotalKm, els.statMembers].forEach(function(e){ e.classList.remove('skeleton'); });
     animateNumber(els.statTeams, state.teamsAll.length, false);
-    animateNumber(els.statTotalKm, totalKm, false);
+    animateNumber(els.statTotalKm, totalKm, true);
     animateNumber(els.statMembers, totalMembers, false);
   }
 
@@ -692,7 +692,7 @@
         '<div class="footer-step">' + t.avgRank + '</div>';
       els.podium.appendChild(card);
       animateNumber(card.querySelector('.tk-num'), t.avgKm, true);
-      animateNumber(card.querySelector('.total-num'), t.totalKm, false);
+      animateNumber(card.querySelector('.total-num'), t.totalKm, true);
       animateNumber(card.querySelector('.mem-num'), t.members, false);
     });
   }
@@ -715,7 +715,7 @@
         '<div class="row-name">' + escapeHtml(t.name) + '</div>' +
       '</div>' +
       '<div class="row-stats">' +
-        '<div class="stat' + totalHi + '"><span class="v">' + fmtInt(t.totalKm) + ' km</span><span class="l">Tổng Km</span></div>' +
+        '<div class="stat' + totalHi + '"><span class="v">' + fmtDec(t.totalKm) + ' km</span><span class="l">Tổng Km</span></div>' +
         '<div class="stat"><span class="v">' + fmtInt(t.members) + '</span><span class="l">Thành viên</span></div>' +
         '<div class="stat' + avgHi + '"><span class="v">' + fmtDec(t.avgKm) + '</span><span class="l">Km TB</span></div>' +
       '</div>';
